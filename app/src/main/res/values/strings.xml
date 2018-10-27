@@ -18,4 +18,6 @@
     <string name="delete_crime">Delete Crime</string>
     <string name="view_pager_first">Jump to First</string>
     <string name="view_pager_last">Jump to Last</string>
+    <string name="no_crimes">There are no crimes reported</string>
+    <string name="report_crime">Report crime</string>
 </resources>
