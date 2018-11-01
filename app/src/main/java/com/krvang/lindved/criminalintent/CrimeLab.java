@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 import com.krvang.lindved.criminalintent.database.CrimeBaseHelper;
 import com.krvang.lindved.criminalintent.database.CrimeCursorWrapper;
@@ -16,6 +17,8 @@ import java.util.List;
 import java.util.UUID;
 
 public class CrimeLab {
+
+    private static final String TAG = "CRIME_LAB";
 
     private static CrimeLab sCrimeLab;
 
@@ -42,6 +45,12 @@ public class CrimeLab {
 
     public void deleteCrime(Crime crime){
 
+        int result = mDatabase.delete(CrimeTable.NAME,
+                CrimeTable.Cols.UUID + " = ?",
+                new String[] { crime.getId().toString()});
+
+        if(result != 1)
+            Log.d(TAG, String.format("Unable to delete Crime '%s' from database", crime.getTitle()));
     }
 
     public List<Crime> getCrimes(){
@@ -100,6 +109,7 @@ public class CrimeLab {
 
         return new CrimeCursorWrapper(cursor);
     }
+
 
     private static ContentValues getContentValues(Crime crime){
         ContentValues values = new ContentValues();
