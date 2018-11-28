@@ -16,6 +16,7 @@ import android.support.v4.app.ShareCompat;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.text.format.DateFormat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -45,6 +46,9 @@ public class CrimeFragment extends Fragment {
     private CheckBox mSolvedCheckBox;
     private Button mSuspectButton;
     private Button mReportButton;
+    private Button mCallSuspectButton;
+
+    private Uri mPhoneUri;
 
     public static CrimeFragment newInstance(UUID crimeId){
         Bundle args = new Bundle();
@@ -142,6 +146,18 @@ public class CrimeFragment extends Fragment {
         if(mCrime.getSuspect() != null)
             mSuspectButton.setText(mCrime.getSuspect());
 
+        mCallSuspectButton = v.findViewById(R.id.crime_call_suspect);
+        if(mCrime.getSuspectPhone() == null || mCrime.getSuspectPhone().isEmpty())
+            mCallSuspectButton.setEnabled(false);
+        mCallSuspectButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(Intent.ACTION_DIAL);
+                intent.setData(Uri.parse(mCrime.getSuspectPhone()));
+                startActivity(intent);
+            }
+        });
+
         PackageManager packageManager = getActivity().getPackageManager();
         if(packageManager.resolveActivity(pickContact, PackageManager.MATCH_DEFAULT_ONLY) == null)
             mSuspectButton.setEnabled(false);
@@ -180,8 +196,10 @@ public class CrimeFragment extends Fragment {
         }
         else if(requestCode == REQUEST_CONTACT){
             Uri contactUri = data.getData();
+
             // Specify which fields you want your query to return values for
             String[] queryFields = new String[] {
+                    ContactsContract.Contacts._ID,
                     ContactsContract.Contacts.DISPLAY_NAME
             };
             // Perform your query - the contractUri is like a "where" clause
@@ -192,11 +210,29 @@ public class CrimeFragment extends Fragment {
                     return;
 
                 c.moveToFirst();
-                String suspect = c.getString(0);
+                String contactId = c.getString(c.getColumnIndex(ContactsContract.Contacts._ID));
+                String suspect = c.getString(c.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
                 mCrime.setSuspect(suspect);
                 mSuspectButton.setText(suspect);
+
+                c.close();
+
+                // Querying for Phone
+                c = getActivity().getContentResolver().query(
+                        ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                        null,
+                        ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
+                        new String[]{contactId},
+                        null);
+
+                c.moveToFirst();
+                String phoneNumber = c.getString(c.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                mCrime.setSuspectPhone(String.format("tel:%s", phoneNumber));
             }finally {
                 c.close();
+            }
+            if(mCrime.getSuspectPhone() != null && !mCrime.getSuspectPhone().isEmpty()){
+                mCallSuspectButton.setEnabled(true);
             }
         }
     }
