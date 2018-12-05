@@ -11,6 +11,7 @@ import com.krvang.lindved.criminalintent.database.CrimeCursorWrapper;
 import com.krvang.lindved.criminalintent.database.CrimeDbSchema;
 import com.krvang.lindved.criminalintent.database.CrimeDbSchema.CrimeTable;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -87,6 +88,11 @@ public class CrimeLab {
         }finally {
             cursor.close();
         }
+    }
+
+    public File getPhotoFile(Crime crime) {
+        File filesDir = mContext.getFilesDir();
+        return new File(filesDir, crime.getPhotoFilename());
     }
 
     public void updateCrime(Crime crime){
