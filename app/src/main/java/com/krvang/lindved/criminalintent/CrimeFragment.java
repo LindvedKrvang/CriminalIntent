@@ -27,6 +27,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -212,7 +213,14 @@ public class CrimeFragment extends Fragment {
             }
         });
 
-        updatePhotoView();
+        ViewTreeObserver observer = mPhotoView.getViewTreeObserver();
+        observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                int width = mPhotoView.getWidth(), height = mPhotoView.getHeight();
+                updatePhotoView(width, height);
+            }
+        });
 
         return v;
     }
@@ -326,6 +334,15 @@ public class CrimeFragment extends Fragment {
             mPhotoView.setImageDrawable(null);
         else {
             Bitmap bitmap = PictureUtils.getScaledBitmap(mPhotoFile.getPath(), getActivity());
+            mPhotoView.setImageBitmap(bitmap);
+        }
+    }
+
+    private void updatePhotoView(int width, int height) {
+        if (mPhotoFile == null || !mPhotoFile.exists())
+            mPhotoView.setImageDrawable(null);
+        else {
+            Bitmap bitmap = PictureUtils.getScaledBitmap(mPhotoFile.getPath(), width, height);
             mPhotoView.setImageBitmap(bitmap);
         }
     }
