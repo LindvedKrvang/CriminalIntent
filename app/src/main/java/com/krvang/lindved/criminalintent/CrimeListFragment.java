@@ -10,6 +10,8 @@ import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.helper.ItemTouchHelper;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -40,6 +42,8 @@ public class CrimeListFragment extends Fragment {
     private boolean mSubtitleVisible;
     private Callbacks mCallbacks;
 
+    private ItemTouchHelper mItemTouchHelper;
+
     /**
      * Required interface for hosting activities.
      */
@@ -69,6 +73,24 @@ public class CrimeListFragment extends Fragment {
 
         mCrimeRecyclerView = view.findViewById(R.id.crime_recycler_view);
         mCrimeRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+
+        mItemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT | ItemTouchHelper.LEFT) {
+            @Override
+            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+                int itemPosition = viewHolder.getAdapterPosition();
+                CrimeAdapter crimeAdapter = (CrimeAdapter) mCrimeRecyclerView.getAdapter();
+                Crime crime = crimeAdapter.getCrime(itemPosition);
+                CrimeLab.get(getActivity()).deleteCrime(crime);
+                updateUI();
+            }
+        });
+
+        mItemTouchHelper.attachToRecyclerView(mCrimeRecyclerView);
 
         mNoCrimesTextView = view.findViewById(R.id.no_crimes_text);
         mReportCrimeButton = view.findViewById(R.id.report_crime_button);
@@ -245,6 +267,10 @@ public class CrimeListFragment extends Fragment {
 
         public void setCrimes(List<Crime> crimes){
             mCrimes = crimes;
+        }
+
+        public Crime getCrime(int position) {
+            return mCrimes.get(position);
         }
     }
 }
